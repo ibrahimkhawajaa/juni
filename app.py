@@ -365,7 +365,7 @@ with all_tabs[0]:
 
     search_column_input, sort_by_column, sort_direction_selector = st.columns([3, 2, 1])
     with search_column_input:
-        column_search_text = st.text_input("🔍 Search column name", "")
+        column_search_text = st.text_input("🔍 Search data (text anywhere)", "")
     with sort_by_column:
         table_sort_column = st.selectbox("Sort by", ["None"] + dataframe.columns.tolist(), key="tab_sort")
     with sort_direction_selector:
@@ -373,8 +373,11 @@ with all_tabs[0]:
 
     preview_dataframe = dataframe.copy()
     if column_search_text:
-        matching_columns = [column for column in preview_dataframe.columns if column_search_text.lower() in column.lower()]
-        preview_dataframe = preview_dataframe[matching_columns]
+        search_term_lower = column_search_text.lower()
+        search_mask = preview_dataframe.astype(str).apply(
+            lambda col: col.str.contains(search_term_lower, case=False, na=False, regex=False)
+        ).any(axis=1)
+        preview_dataframe = preview_dataframe[search_mask]
     if table_sort_column != "None" and table_sort_column in preview_dataframe.columns:
         preview_dataframe = preview_dataframe.sort_values(table_sort_column, ascending=(table_sort_direction == "↑ Asc"))
 
